@@ -1,7 +1,8 @@
 ﻿using FlipConnectFour;
+using System.Diagnostics;
 
 // Connect 4 board
-Board b = new(3, 3, 3);
+Board b = new(7, 6, 4);
 
 // Each board can be in many terminal states:
 // Win for One
@@ -22,34 +23,34 @@ void Clear(string s)
         Directory.CreateDirectory(s);
     }
 }
-Clear(drawDir);
-Clear(p1Wins);
-Clear(p2Wins);
+//Clear(drawDir);
+//Clear(p1Wins);
+//Clear(p2Wins);
 
 Board.State Next(Board.State player) => player == Board.State.One ? Board.State.Two : Board.State.One;
 
-HashSet<List<int>> seenActions = new();
+long wins = 0;
+long losses = 0;
+long draws = 0;
 
 void WriteBoardWin(Board.State winner, Board b)
 {
-    if (!seenActions.Add(b.Actions))
-    {
-        throw new InvalidOperationException("Duplicate actions!?!?");
-    }
-    var path = winner == Board.State.One ? p1Wins : p2Wins;
-    File.WriteAllText(Path.Combine(path, $"{b.Width}_{b.Height}_{b.Actions.Count}_{DateTime.UtcNow.Ticks}.txt"), b.ToString());
-    Console.WriteLine($"{winner} Won in {b.Actions.Count} Actions!");
+    //var path = winner == Board.State.One ? p1Wins : p2Wins;
+    //File.WriteAllText(Path.Combine(path, $"{b.Width}_{b.Height}_{b.Actions.Count}_{DateTime.UtcNow.Ticks}.txt"), b.ToString());
+    if (winner == Board.State.One)
+        wins++;
+    else
+        losses++;
+    if (wins % 5000 == 0 || losses % 5000 == 0)
+        Console.WriteLine($"{wins} - {losses}: {winner} Won in {b.Actions.Count} Actions!");
 }
 
 void WriteBoardDraw(Board b)
 {
-    if (!seenActions.Add(b.Actions))
-    {
-        throw new InvalidOperationException("Duplicate actions!?!?");
-    }
-    seenActions.Add(b.Actions);
-    File.WriteAllText(Path.Combine(drawDir, $"{b.Width}_{b.Height}_{b.Actions.Count}_{DateTime.UtcNow.Ticks}.txt"), b.ToString());
-    Console.WriteLine($"Draw in {b.Actions.Count} Actions!");
+    //File.WriteAllText(Path.Combine(drawDir, $"{b.Width}_{b.Height}_{b.Actions.Count}_{DateTime.UtcNow.Ticks}.txt"), b.ToString());
+    draws++;
+    if (draws % 5000 == 0)
+        Console.WriteLine($"{draws} - Draw in {b.Actions.Count} Actions!");
 }
 
 void MakeAction(Board toClone, Board.State player)
@@ -100,6 +101,7 @@ void MakeAction(Board toClone, Board.State player)
     }
     // Otherwise, we have iterated everything, so we are good to go.
 }
+var st = Stopwatch.StartNew();
 
 void FirstPass()
 {
@@ -123,7 +125,7 @@ void FirstPass()
                 // If we DO NOT win, let our opponent play the game.
                 MakeAction(b2, Board.State.Two);
                 Console.WriteLine("============================================================");
-                Console.WriteLine("Completed an initial Branch!");
+                Console.WriteLine($"Completed an initial Branch! Running total: {st.Elapsed}!");
                 Console.WriteLine("============================================================");
             }
         }
@@ -158,6 +160,11 @@ void FirstPass()
 }
 
 FirstPass();
+st.Stop();
+Console.WriteLine($"Took: {st.Elapsed}");
+Console.WriteLine($"Wins: {wins}");
+Console.WriteLine($"Losses: {losses}");
+Console.WriteLine($"Draws: {draws}");
 
 //b.Place(Board.State.One, 0);
 //b.Place(Board.State.Two, 0);

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace FlipConnectFour
 {
-    public class Board
+    public struct Board
     {
         public enum State
         {
